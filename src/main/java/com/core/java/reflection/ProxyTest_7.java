@@ -1,14 +1,17 @@
 package com.core.java.reflection;
 
-import com.core.java.entity.Employee;
-
 import java.lang.reflect.*;
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
+import java.util.List;
 
 /**
- * code copy from below link
+ * study proxy and code copy from below link
  * https://www.jianshu.com/p/28286f460f1e
+ *
+ * 在这个博客内 ,  testNull() 方法内空指针的原因我做了修改 , 和原博客不同
+ * 另外模拟生成的 代理类 Proxy_7 内的方法我也做了修改 , 代理类的每个方法都应该是调用的invocationHandler的invoke方法 ,
+ * 而invocationHandler的invoke方法理应使用的是被代理对象的实例和method
  */
 public class ProxyTest_7 {
 
@@ -25,29 +28,25 @@ public class ProxyTest_7 {
         //打印所有Method
         getMethods(cl);
 
+        try {
+            testNull();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
+        //
+        getMyInstance();
 
+        //利用代理模拟AOP
+        List target = new ArrayList<>();
+        List proxyObject = (List) getProxy(target, new MyAdvice());
+        boolean abc = proxyObject.add("abc");
+        System.out.println(proxyObject.size());
 
 
         // Use ReflectionTest to print class
         // cl = Proxy.getProxyClass(null, new Class[]{Comparable.class});
-        Class<?> superclass = cl.getSuperclass();
-        int modifiers = cl.getModifiers();
-        String s = Modifier.toString(modifiers);
-        System.out.print(s + " " + cl);
-
-        //print super class
-        if (superclass != null && superclass != Object.class) {
-            System.out.println(" extends " + superclass.getName());
-        }
-
-        System.out.println("{");
-        ReflectionTest_1.printConstructors(cl);
-        System.out.println();
-        ReflectionTest_1.printMethods(cl);
-        System.out.println();
-        ReflectionTest_1.printFields(cl);
-        System.out.println("}");
+        // ReflectionTest_1.printClassDetail(cl);
 
         /**
          * public final class com.sun.proxy.$Proxy1 extends java.lang.reflect.Proxy
@@ -114,4 +113,123 @@ public class ProxyTest_7 {
             System.out.println(sb.toString());
         }
     }
+
+    /**
+     * 创建动态类的实例对象及调用其方法
+     * @throws Exception
+     */
+    public static void testNull() throws Exception{
+        System.out.println("---------------------test invoke return Null-----------------");
+        //通过打印构造方法，得到的动态代理类有一个InvocationHandler参数
+        Class clazzProxy1 = Proxy.getProxyClass(Collection.class.getClassLoader(), Collection.class);
+        //获取Constructor类
+        Constructor constructor = clazzProxy1.getConstructor(InvocationHandler.class);
+        //传递InvocationHandler参数,手动实现InvocationHander接口
+        //返回的结果是Collection接口的对象
+        Collection proxy1 = (Collection) constructor.newInstance(new InvocationHandler() {
+            @Override
+            public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+
+                return null;
+            }
+        });
+        /**
+         * 通过打印生成的对象发现结果为null 有两种种可能：
+         * 第一种可能是对象为null
+         * 第二种可能是对象的toString()方法为null
+         */
+        System.out.println(proxy1);
+        //对象没有报空指针异常，所以对象的toString为null,可以得出结论，代理类对象的toString()方法被代理类重写了。
+        System.out.println(proxy1.toString());
+        //调用一个方法，运行成功，所以proxy1不为null
+        proxy1.clear();
+
+        //调用size方法出错，为什么出错呢？size方法返回值是int型 , null赋值给int会空指针
+        proxy1.size();
+    }
+
+    public static void getMyInstance(){
+        System.out.println("---------------------test normal proxy-----------------");
+        //Proxy.newInstance方法直接创建出代理对象
+        Collection proxy1 = (Collection) Proxy.newProxyInstance(
+                Collection.class.getClassLoader(),
+                new Class[]{Collection.class},
+                new InvocationHandler() {
+                    //方法外部指定目标
+                    List target = new ArrayList<>();
+                    @Override
+                    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+                        //在调用代码之前加入系统功能代码
+                        long startTime = System.currentTimeMillis();
+                        //睡眠1秒钟
+                        Thread.sleep(1000);
+                        //目标方法
+                        Object retVal = method.invoke(target, args);
+                        //在调用代码之后加入系统功能代码
+                        long endTime = System.currentTimeMillis();
+                        System.out.println( method.getName() + "方法花费了:" + (endTime - startTime) + "毫秒");
+                        return retVal;
+                    }
+                });
+
+        proxy1.add("a");
+        proxy1.add("b");
+        proxy1.add("c");
+        //3
+        System.out.println(proxy1.size());
+    }
+
+    /**
+     * 使用传递参数的方式灵活创建代理对象
+     * @param target:目标对象
+     * @param advice:系统功能对象
+     * @return Proxy Object:代理对象
+     */
+    public static Object getProxy(final Object target,final Advice advice){
+
+        //Proxy.newInstance方法直接创建出代理对象
+        Object proxy3 = Proxy.newProxyInstance(
+                target.getClass().getClassLoader(),
+                target.getClass().getInterfaces(),
+                new InvocationHandler() {
+
+                    @Override
+                    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+
+                        advice.beforeMethod(method);
+
+                        Object retVal = method.invoke(target, args);
+
+                        advice.afterMethod(method);
+
+                        return retVal;
+                    }
+                });
+        return proxy3;
+    }
+
+
 }
+
+interface Advice {
+
+    void beforeMethod(Method method);
+
+    void afterMethod(Method method);
+
+}
+
+class MyAdvice implements Advice {
+
+    @Override
+    public void beforeMethod(Method method) {
+        System.out.println("在目标方法之   前   调用！");
+    }
+
+    @Override
+    public void afterMethod(Method method) {
+        System.out.println("在目标方法之   后   调用！");
+    }
+
+}
+
