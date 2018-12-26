@@ -10,8 +10,15 @@ import java.util.List;
  * https://www.jianshu.com/p/28286f460f1e
  *
  * 在这个博客内 ,  testNull() 方法内空指针的原因我做了修改 , 和原博客不同
- * 另外模拟生成的 代理类 Proxy_7 内的方法我也做了修改 , 代理类的每个方法都应该是调用的invocationHandler的invoke方法 ,
- * 而invocationHandler的invoke方法理应使用的是被代理对象的实例和method
+ * 一
+ * proxy1.size();
+ * 报空指针的原因是这个方法的返回值是Int型 , 而invocationHandler的invoke()返回的是null;
+ * proxy1.toString();
+ * 这种返回值是引用类型的方法 , 就不会报错 .
+ * 二
+ * 模拟JVM生成的代理类Proxy1 , 它的所有的方法应该调用invocationHandler的invoke()方法 ,
+ * 但是传递的参数不应该是this , 这样是否会递归调用自己 . 我认为invocationHandler的invoke()方法调用的都是被代理的对象的method .
+ *
  */
 public class ProxyTest_7 {
 
