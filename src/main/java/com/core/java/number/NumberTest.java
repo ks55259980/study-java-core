@@ -44,14 +44,7 @@ public class NumberTest {
         //舍入误差0.8999999999999999
         System.out.println(2.0-1.1);
 
-        //e为底数的log运算 log e(5)
-        System.out.println(Math.log(5));
 
-        //2为底数的log运算 log 2(5)
-        System.out.println(Math.log(5)/Math.log(2));
-
-        //10为底数
-        System.out.println(Math.log10(10));
     }
 
 
