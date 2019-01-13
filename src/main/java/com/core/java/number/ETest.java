@@ -37,7 +37,7 @@ public class ETest {
         //常数e=2.7
         System.out.println(Math.E);
 
-        //3得2次方
+        //3得2次方 , 参数和结果都是double类型
         System.out.println(Math.pow(3,2));
 
         //e为底数的log运算 log e(5)
@@ -49,6 +49,27 @@ public class ETest {
         //10为底数
         System.out.println(Math.log10(10));
 
+        //求4的平方根
+        System.out.println(Math.sqrt(4));
 
+        // 负数做余数运算
+        System.out.println(-2%12);
+        //取余数 , 使得得到的值总为正数
+        //例如计算时钟指针的位置 , -2点其实为10点
+        System.out.println(Math.floorMod(-2,12));
+
+        // Math.sin(30) 这个方法的30不是度数
+        System.out.println(Math.signum(30));
+
+        //以e为底的对数运算
+        System.out.println(Math.log(Math.E));
+
+        //以10为底的对数运算
+        System.out.println(Math.log10(10));
+
+        // e^2
+        System.out.println(Math.exp(2));
+
+        System.out.println(Math.PI);
     }
 }

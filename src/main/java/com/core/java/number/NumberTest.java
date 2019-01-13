@@ -45,6 +45,14 @@ public class NumberTest {
         System.out.println(2.0-1.1);
 
 
+        //double转为int直接舍去尾数
+        System.out.println((int)1.2);
+        System.out.println((int)1.8);
+
+        //负数做余数运算  -3%2 = -1
+        System.out.println(-3%2);
+
+
     }
 
 
